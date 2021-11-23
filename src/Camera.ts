@@ -87,7 +87,7 @@ export class Camera {
   }
 
   public burst = (
-    { length, filename, burstMode, forceOverwrite, captureTarget, deleteAllFiles }: BurstOptions,
+    { length, filename, burstMode, forceOverwrite, captureTarget, deleteAllFiles, downloadPictures=true }: BurstOptions,
     callbacks?: Callbacks
   ) => {
     if (this.model.startsWith("Canon")) {
@@ -101,7 +101,7 @@ export class Camera {
       ];
       !!forceOverwrite && args.push(`--force-overwrite`)
       !!filename && args.push(`--filename=${filename}%n.%C`);
-      captureTarget === 1 && args.push(`--get-all-files`)
+      captureTarget === 1 && downloadPictures && args.push(`--get-all-files`)
       deleteAllFiles && args.push(`-f`) && args.push(`/`) && args.push(`--delete-all-files`) && args.push(`--recurse`)
       this._process = this.spawn(args, callbacks);
     } else {
@@ -123,24 +123,31 @@ export class Camera {
       keepRAW,
       noKeep,
       resetInterval,
-      skipExisting
+      skipExisting,
+      captureTarget,
+      downloadPicturesAtTheEnd=true,
+      deleteAllFiles
     }: CaptureOptions,
     callbacks?: Callbacks
   ) => {
     const args: string[] = [];
+    downloadPicturesAtTheEnd ? args.push("--capture-image") : args.push("--capture-image-and-download")
     !!bulb && args.push(`--bulb=${bulb}`);
     !!filename && args.push(`--filename=${filename}`);
     !!frames && args.push(`--frames=${frames}`);
     !!interval && args.push(`--interval=${interval}`);
+    !!captureTarget && args.push(`--set-config=capturetarget=${ captureTarget }`)
     forceOverwrite && args.push(`--force-overwrite`);
     keep && args.push(`--keep`);
     keepRAW && args.push(`--keep-raw`);
     noKeep && args.push(`--no-keep`);
     resetInterval && args.push(`--reset-interval`);
     skipExisting && args.push(`--skip-existing`);
-
+    
+    downloadPicturesAtTheEnd && args.push("--get-all-files")
+    deleteAllFiles && args.push(`-f`) && args.push(`/`) && args.push(`--delete-all-files`) && args.push(`--recurse`)
     this._process = this.spawn(
-      ["--capture-image-and-download", ...args],
+      args,
       callbacks
     );
   };
