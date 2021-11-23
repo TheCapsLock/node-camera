@@ -3,6 +3,7 @@ import {
   BurstOptions,
   Callbacks,
   CaptureOptions,
+  GetAllFilesOptions,
   CommandResult,
   CameraParams,
   Identificator
@@ -125,7 +126,7 @@ export class Camera {
       resetInterval,
       skipExisting,
       captureTarget,
-      downloadPicturesAtTheEnd=true,
+      downloadPicturesAtTheEnd,
       deleteAllFiles
     }: CaptureOptions,
     callbacks?: Callbacks
@@ -144,8 +145,24 @@ export class Camera {
     resetInterval && args.push(`--reset-interval`);
     skipExisting && args.push(`--skip-existing`);
     
-    downloadPicturesAtTheEnd && args.push("--get-all-files")
-    deleteAllFiles && args.push(`-f`) && args.push(`/`) && args.push(`--delete-all-files`) && args.push(`--recurse`)
+    !!downloadPicturesAtTheEnd && args.push("--get-all-files")
+    !!deleteAllFiles && args.push(`-f`) && args.push(`/`) && args.push(`--delete-all-files`) && args.push(`--recurse`)
+    console.log(`using args ${args.join(" ")}`)
+    this._process = this.spawn(
+      args,
+      callbacks
+    );
+  };
+
+  public getAllFiles = (
+    {
+      deleteAllFiles
+    }: GetAllFilesOptions,
+    callbacks?: Callbacks
+  ) => {
+    const args: string[] = ["--get-all-files"];
+    !!deleteAllFiles && args.push(`-f`) && args.push(`/`) && args.push(`--delete-all-files`) && args.push(`--recurse`)
+    console.log(`using args ${args.join(" ")}`)
     this._process = this.spawn(
       args,
       callbacks
