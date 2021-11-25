@@ -66,19 +66,21 @@ export class Camera {
             .split("  ")
             .filter(fragment => fragment !== "")
             .map(fragment => (!!fragment ? fragment.trim() : fragment));
-          const configuration =
-            !!model && !!port
-              ? (await Camera.getConfigurationTree(port)).data
-              : undefined;
-          return {
-            model,
-            port,
-            configuration
-          } as CameraParams;
+          let configuration = undefined
+          if (!!model && !!port) {
+            await Camera.getConfigurationTree(port).then((data) => {
+              configuration = data
+            })
+            .catch((err) => {
+              let m = err.error && err.error.error && err.error.error.stderr
+              reject(`Failed getting configuration for camera ${model} on port ${port}: ${m}`)
+            })
+            return {model, port, configuration} as CameraParams;
+          }
         });
       const result = await Promise.all(cameras);
       // @ts-ignore
-      resolve(result.filter((c: CameraParams) => c.model && c.port));
+      resolve(result.filter((c: CameraParams) => c && c.model && c.port));
     });
 
   public stopCapture = () => this._process?.kill();
@@ -162,7 +164,15 @@ export class Camera {
   ) => {
     const args: string[] = ["--get-all-files"];
     !!deleteAllFiles && args.push(`-f`) && args.push(`/`) && args.push(`--delete-all-files`) && args.push(`--recurse`)
-    console.log(`using args ${args.join(" ")}`)
+    this._process = this.spawn(
+      args,
+      callbacks
+    );
+  };
+
+  public deleteAllFiles = (callbacks?: Callbacks) => {
+    const args: string[] = [];
+    args.push(`-f`) && args.push(`/`) && args.push(`--delete-all-files`) && args.push(`--recurse`)
     this._process = this.spawn(
       args,
       callbacks

@@ -36,4 +36,8 @@ export type CaptureOptions = Partial<{
   deleteAllFiles?: boolean
 }>;
 
+export type GetAllFilesOptions = Partial<{
+  deleteAllFiles: boolean;
+}>;
+
 export type BurstOptions = { captureTarget: number, length: number, burstMode?: number,  deleteAllFiles?: boolean, filename?: string, forceOverwrite?: boolean, downloadPictures?: boolean };
